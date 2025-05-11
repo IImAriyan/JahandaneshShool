@@ -1,0 +1,377 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Theme */
+    --background: 210 50% 98%;
+    --foreground: 222.2 84% 4.9%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    
+    --primary: 210 100% 50%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    
+    --accent: 210 100% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    
+    --radius: 0.75rem;
+    
+    --sidebar-background: 210 100% 98%;
+    --sidebar-foreground: 210 50% 20%;
+    --sidebar-primary: 210 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 100% 95%;
+    --sidebar-accent-foreground: 210 100% 20%;
+    --sidebar-border: 210 50% 90%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+  
+  .dark {
+    /* Dark Theme */
+    --background: 222.2 47% 11%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222.2 47% 11%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222.2 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 210 100% 60%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+    
+    --sidebar-background: 215 28% 17%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 217.2 91.2% 59.8%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 28% 25%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 215 28% 30%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+  
+  .blue {
+    /* Blue Theme */
+    --background: 210 50% 98%;
+    --foreground: 210 60% 10%;
+    
+    --card: 210 30% 100%;
+    --card-foreground: 210 60% 10%;
+    
+    --popover: 210 30% 100%;
+    --popover-foreground: 210 60% 10%;
+    
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 210 50% 90%;
+    --secondary-foreground: 210 60% 10%;
+    
+    --muted: 210 40% 90%;
+    --muted-foreground: 210 40% 40%;
+    
+    --accent: 210 100% 95%;
+    --accent-foreground: 210 60% 10%;
+    
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 210 40% 90%;
+    --input: 210 40% 90%;
+    --ring: 210 100% 50%;
+    
+    --sidebar-background: 210 50% 95%;
+    --sidebar-foreground: 210 60% 20%;
+    --sidebar-primary: 210 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 100% 90%;
+    --sidebar-accent-foreground: 210 60% 20%;
+    --sidebar-border: 210 50% 85%;
+    --sidebar-ring: 210 100% 50%;
+  }
+  
+  .purple {
+    /* Purple Theme */
+    --background: 270 50% 98%;
+    --foreground: 270 60% 10%;
+    
+    --card: 270 30% 100%;
+    --card-foreground: 270 60% 10%;
+    
+    --popover: 270 30% 100%;
+    --popover-foreground: 270 60% 10%;
+    
+    --primary: 270 100% 60%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 270 50% 90%;
+    --secondary-foreground: 270 60% 10%;
+    
+    --muted: 270 40% 90%;
+    --muted-foreground: 270 40% 40%;
+    
+    --accent: 270 100% 95%;
+    --accent-foreground: 270 60% 10%;
+    
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 270 40% 90%;
+    --input: 270 40% 90%;
+    --ring: 270 100% 60%;
+    
+    --sidebar-background: 270 50% 95%;
+    --sidebar-foreground: 270 60% 20%;
+    --sidebar-primary: 270 100% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 270 100% 90%;
+    --sidebar-accent-foreground: 270 60% 20%;
+    --sidebar-border: 270 50% 85%;
+    --sidebar-ring: 270 100% 60%;
+  }
+  
+  .green {
+    /* Green Theme */
+    --background: 150 50% 98%;
+    --foreground: 150 60% 10%;
+    
+    --card: 150 30% 100%;
+    --card-foreground: 150 60% 10%;
+    
+    --popover: 150 30% 100%;
+    --popover-foreground: 150 60% 10%;
+    
+    --primary: 150 70% 40%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 150 50% 90%;
+    --secondary-foreground: 150 60% 10%;
+    
+    --muted: 150 40% 90%;
+    --muted-foreground: 150 40% 40%;
+    
+    --accent: 150 70% 95%;
+    --accent-foreground: 150 60% 10%;
+    
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 150 40% 90%;
+    --input: 150 40% 90%;
+    --ring: 150 70% 40%;
+    
+    --sidebar-background: 150 50% 95%;
+    --sidebar-foreground: 150 60% 20%;
+    --sidebar-primary: 150 70% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 150 70% 90%;
+    --sidebar-accent-foreground: 150 60% 20%;
+    --sidebar-border: 150 50% 85%;
+    --sidebar-ring: 150 70% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .animation-delay-200 {
+    animation-delay: 0.2s;
+  }
+  .animation-delay-400 {
+    animation-delay: 0.4s;
+  }
+  .animation-delay-600 {
+    animation-delay: 0.6s;
+  }
+  .animation-delay-800 {
+    animation-delay: 0.8s;
+  }
+}
+
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+html {
+  font-family: "Vazirmatn", system-ui, sans-serif;
+  scroll-behavior: smooth;
+}
+
+.rtl {
+  direction: rtl;
+}
+
+.ltr {
+  direction: ltr;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-schoolblue-300 dark:bg-schoolblue-700 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-schoolblue-400 dark:bg-schoolblue-600;
+}
+
+/* Hero section gradient */
+.hero-gradient {
+  background: linear-gradient(135deg, 
+    theme('colors.schoolblue.50') 0%, 
+    theme('colors.schoolblue.100') 50%,
+    theme('colors.white') 100%
+  );
+}
+
+.dark .hero-gradient {
+  background: linear-gradient(135deg, 
+    theme('colors.schoolblue.950') 0%, 
+    theme('colors.schoolblue.900') 50%,
+    theme('colors.gray.900') 100%
+  );
+}
+
+.blue .hero-gradient {
+  background: linear-gradient(135deg, 
+    theme('colors.blue.50') 0%, 
+    theme('colors.blue.100') 50%,
+    theme('colors.white') 100%
+  );
+}
+
+.purple .hero-gradient {
+  background: linear-gradient(135deg, 
+    theme('colors.purple.50') 0%, 
+    theme('colors.purple.100') 50%,
+    theme('colors.white') 100%
+  );
+}
+
+.green .hero-gradient {
+  background: linear-gradient(135deg, 
+    theme('colors.green.50') 0%, 
+    theme('colors.green.100') 50%,
+    theme('colors.white') 100%
+  );
+}
+
+/* Floating animation */
+.floating {
+  animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+/* Text gradient */
+.text-gradient {
+  @apply bg-gradient-to-r from-schoolblue-600 to-schoolblue-400 bg-clip-text text-transparent;
+}
+
+.dark .text-gradient {
+  @apply bg-gradient-to-r from-schoolblue-400 to-schoolblue-200;
+}
+
+.blue .text-gradient {
+  @apply bg-gradient-to-r from-blue-600 to-blue-400;
+}
+
+.purple .text-gradient {
+  @apply bg-gradient-to-r from-purple-600 to-purple-400;
+}
+
+.green .text-gradient {
+  @apply bg-gradient-to-r from-green-600 to-green-400;
+}
+
+/* Theme transition effects */
+.theme-transition {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Theme selection card */
+.theme-card {
+  @apply rounded-xl border-2 p-4 transition-all duration-300 hover:scale-105 hover:shadow-lg;
+}
+
+.theme-card.active {
+  @apply border-primary ring-2 ring-primary ring-opacity-50;
+}
+
+/* Color bubble */
+.color-bubble {
+  @apply w-10 h-10 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110 cursor-pointer;
+}
+
+
+.purple .trophy {
+  @apply text-purple-600 ;
+}
