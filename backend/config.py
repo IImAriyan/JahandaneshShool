@@ -16,3 +16,13 @@ JWT = {
     "ALGORITHM" :"HS256",
     "ACCESS_TOKEN_EXPIRE_MINUTES" : 30
 }
+
+API_ROUTES = {
+    "USER" : {
+        "USER_LIST" : [["GET"],"/api/v1/user/list"],
+        "GET_USER" :  [["GET"],"/api/v1/user/get/<user_id>"],
+    },
+    "AUTHENTICATION" : {
+        "LOGIN" : "/api/v1/login",
+    }
+}

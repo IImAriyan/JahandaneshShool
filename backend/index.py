@@ -16,27 +16,66 @@
 
 # Import Libraries
 
+
+from flask import Flask, jsonify, request
 from core.database import DB
 from models.user_model import UserModel
 from controllers.user_controller import UserController
 from authentication.jwt import jwt
+from config import API_ROUTES
 
-# ------------------ Testing ----------------- "
+# # ------------------ Testing ----------------- "
+# DB = DB()
+# (connection, cursor) = DB.connect()
+# # user = UserModel(
+# #     ROW=None,
+# #     USER_ID = "1",
+# #     username = "Reza",
+# #     password =  "1368",
+# #     email = "reza@gmail.com",
+# #     phone_number = "0913453821",   
+# #     USER_ROLE = "user",
+# #     nationalCode = "142701294",
+# #     address = "Tehran, Iran"
+# # )
+
+
+# VARIABLES
+HOST = "192.168.10.162"
+PORT = 5000
+
+# ------------------ CREATE DB ----------------- "
 DB = DB()
 (connection, cursor) = DB.connect()
-user = UserModel(
-    ROW=None,
-    USER_ID = "1",
-    username = "Reza",
-    password =  "1368",
-    email = "reza@gmail.com",
-    phone_number = "0913453821",   
-    USER_ROLE = "user",
-    nationalCode = "142701294",
-    address = "Tehran, Iran"
-)
-# # DB.add_user(user, cursor=cursor, connection=connection)
 
-controller = UserController()
-# controller.add_user(user, cursor=cursor, connection=connection)
-print(jwt())
+app = Flask(__name__)
+controllers = {
+    "user_controller": UserController(connection=connection, cursor=cursor),
+}
+
+
+# ------------------ CREATE API ----------------- "
+@app.route(API_ROUTES["USER"]["USER_LIST"][1], methods=API_ROUTES["USER"]["USER_LIST"][0])
+def get_user_list():
+    try:
+        user_list = controllers["user_controller"].get_all_users()
+        return jsonify(user_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route(API_ROUTES["USER"]["GET_USER"][1], methods=API_ROUTES["USER"]["GET_USER"][0])
+def get_user(user_id):
+    try:
+        user = controllers["user_controller"].get_user(user_id)
+        if user:
+            return jsonify(user), 200
+        else:
+            return jsonify({"error": "User not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+def main():
+    if __name__ == "__main__":
+        app.run(host=HOST, port=PORT)
+main()

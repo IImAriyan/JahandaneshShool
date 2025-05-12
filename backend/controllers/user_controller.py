@@ -1,53 +1,37 @@
-
-"""
-# Jahan Danesh School Backend
-"""
-"""
-       Hello, this project is a website for *Jahan Danesh School*, and this part is the backend.  
-     It is built using Python, with the Flask framework and a MySQL database for data storage.  
-     The backend also integrates AI-powered features to enhance user experience and automate certain tasks.  
-      These AI features may include intelligent recommendations, automated content analysis, or interactive  
-         tools to support learning. The backend is designed to be lightweight, fast, and scalable,  
-       ensuring a smooth experience for both students and administrators. APIs are exposed for front-end  
-     integration, and security measures such as authentication and input validation are implemented to  
-                                               protect user data.
-"""
-from typing import Optional, Union, List
+from typing import Optional, List
 from models.user_model import UserModel
 import uuid
 
 
 class UserController:
-    def __init__(self):
-        # Allowed fields for safe updates
+    def __init__(self, cursor=None, connection=None):
+        self.cursor = cursor
+        self.connection = connection
         self.allowed_fields = {
             "username", "password", "email", "phone_number", "USER_ROLE", "nationalCode", "address"
         }
 
-    def _check_db(self, cursor, connection):
-        # Ensure both cursor and connection are provided
-        if cursor is None or connection is None:
+    def _check_db(self):
+        if self.cursor is None or self.connection is None:
             raise ValueError("Cursor and connection must be provided.")
 
-    def user_exists(self, username: str, cursor=None, connection=None) -> bool:
-        # Check if a user with the given username exists in the database
-        self._check_db(cursor, connection)
+    def user_exists(self, username: str) -> bool:
+        self._check_db()
 
-        cursor.execute(
+        self.cursor.execute(
             "SELECT 1 FROM jahandanesh_users WHERE username = %s", (username,)
         )
-        return cursor.fetchone() is not None
+        return self.cursor.fetchone() is not None
 
-    def add_user(self, user: UserModel, cursor=None, connection=None) -> bool:
-        # Add a new user to the database if not already exists
-        self._check_db(cursor, connection)
+    def add_user(self, user: UserModel) -> bool:
+        self._check_db()
 
-        if self.user_exists(user.username, cursor=cursor, connection=connection):
+        if self.user_exists(user.username):
             return False
+
         user.USER_ID = str(uuid.uuid4())
 
-
-        cursor.execute(
+        self.cursor.execute(
             """
             INSERT INTO jahandanesh_users 
             (USER_ID, username, password, email, phone_number, USER_ROLE, nationalCode, address) 
@@ -64,71 +48,69 @@ class UserController:
                 user.address,
             ),
         )
-        connection.commit()
+        self.connection.commit()
         return True
 
-    def get_user(self, USER_ID: str, cursor=None, connection=None) -> Optional[UserModel]:
-        # Retrieve a user by USER_ID
-        self._check_db(cursor, connection)
+    def get_user(self, USER_ID: str) -> Optional[UserModel]:
+        self._check_db()
 
-        cursor.execute(
+        self.cursor.execute(
             "SELECT * FROM jahandanesh_users WHERE USER_ID = %s", (USER_ID,)
         )
-        result = cursor.fetchone()
+        result = self.cursor.fetchone()
 
         if result is None:
             return None
 
-        return UserModel(
-            ROW=result,
-            USER_ID=result[0],
-            username=result[1],
-            password=result[2],
-            email=result[3],
-            phone_number=result[4],
-            USER_ROLE=result[5],
-            nationalCode=result[6],
-            address=result[7]
-        )
+        return{
+            "USER_ID": result[1],
+            "username": result[2],
+            "password": result[3],
+            "email": result[4],
+            "phone_number": result[5],
+            "USER_ROLE": result[6],
+            "nationalCode": result[7],
+            "address": result[8],
+        }
 
-    def update_user(self, USER_ID: str, field: str, value, cursor=None, connection=None) -> bool:
-        # Update a specific field of a user
-        self._check_db(cursor, connection)
+    def update_user(self, USER_ID: str, field: str, value) -> bool:
+        self._check_db()
 
         if field not in self.allowed_fields:
             raise ValueError("Invalid field for update.")
 
         query = f"UPDATE jahandanesh_users SET {field} = %s WHERE USER_ID = %s"
-        cursor.execute(query, (value, USER_ID))
-        connection.commit()
+        self.cursor.execute(query, (value, USER_ID))
+        self.connection.commit()
         return True
 
-    def delete_user(self, USER_ID: str, cursor=None, connection=None) -> bool:
-        # Delete a user by USER_ID
-        self._check_db(cursor, connection)
+    def delete_user(self, USER_ID: str) -> bool:
+        self._check_db()
 
-        cursor.execute("DELETE FROM jahandanesh_users WHERE USER_ID = %s", (USER_ID,))
-        connection.commit()
+        self.cursor.execute("DELETE FROM jahandanesh_users WHERE USER_ID = %s", (USER_ID,))
+        self.connection.commit()
         return True
 
-    def get_all_users(self, cursor=None, connection=None) -> List[UserModel]:
-        # Retrieve all users from the database
-        self._check_db(cursor, connection)
+    def get_all_users(self) :
+        self._check_db()
 
-        cursor.execute("SELECT * FROM jahandanesh_users")
-        results = cursor.fetchall()
+        self.cursor.execute("SELECT * FROM jahandanesh_users")
+        results = self.cursor.fetchall()
 
         users = []
-        for row in results:
-            users.append(UserModel(
-                ROW=row,
-                USER_ID=row[0],
-                username=row[1],
-                password=row[2],
-                email=row[3],
-                phone_number=row[4],
-                USER_ROLE=row[5],
-                nationalCode=row[6],
-                address=row[7]
-            ))
+        for result in results:
+            users.append(
+                {
+                    "ROW": result[0],
+                    "USER_ID": result[1],
+                    "username": result[2],
+                    "password": result[3],
+                    "email": result[4],
+                    "phone_number": result[5],
+                    "USER_ROLE": result[6],
+                    "nationalCode": result[7],
+                    "address": result[8]
+                }
+            )
+
         return users
