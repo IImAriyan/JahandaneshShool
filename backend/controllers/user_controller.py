@@ -1,6 +1,22 @@
+"""
+# Jahan Danesh School Backend
+"""
+"""
+       Hello, this project is a website for *Jahan Danesh School*, and this part is the backend.  
+     It is built using Python, with the Flask framework and a MySQL database for data storage.  
+     The backend also integrates AI-powered features to enhance user experience and automate certain tasks.  
+      These AI features may include intelligent recommendations, automated content analysis, or interactive  
+         tools to support learning. The backend is designed to be lightweight, fast, and scalable,  
+       ensuring a smooth experience for both students and administrators. APIs are exposed for front-end  
+     integration, and security measures such as authentication and input validation are implemented to  
+                                               protect user data.
+"""
+import uuid
+from authentication.jwt import authentication 
 from typing import Optional, List
 from models.user_model import UserModel
-import uuid
+
+
 
 
 class UserController:
@@ -114,3 +130,35 @@ class UserController:
             )
 
         return users
+    
+    def isAdmin(self, USER_ID: str) -> bool:
+        self._check_db()
+
+        self.cursor.execute(
+            "SELECT USER_ROLE FROM jahandanesh_users WHERE USER_ID = %s", (USER_ID,)
+        )
+        result = self.cursor.fetchone()
+
+        if result is None:
+            return False
+
+        return result[0] != "user"
+    
+
+    def login(self, username: str, password: str) -> bool:
+        self._check_db()
+
+        self.cursor.execute(
+            "SELECT * FROM jahandanesh_users WHERE username = %s AND password = %s",
+            (username, password)
+        )
+        result = self.cursor.fetchone()
+
+        if result is None:
+            return {"text":"رمز یا نام کاربری اشتباه است"}, 400
+        else :
+            auth = authentication()
+            token = auth.create_token(result[1])
+            return {"text":"ورود با موفقیت انجام شد","token":token} , 200
+
+    

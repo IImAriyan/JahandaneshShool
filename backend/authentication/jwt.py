@@ -1,20 +1,8 @@
-"""
-# Jahan Danesh School Backend
-"""
-"""
-       Hello, this project is a website for *Jahan Danesh School*, and this part is the backend.  
-     It is built using Python, with the Flask framework and a MySQL database for data storage.  
-     The backend also integrates AI-powered features to enhance user experience and automate certain tasks.  
-      These AI features may include intelligent recommendations, automated content analysis, or interactive  
-         tools to support learning. The backend is designed to be lightweight, fast, and scalable,  
-       ensuring a smooth experience for both students and administrators. APIs are exposed for front-end  
-     integration, and security measures such as authentication and input validation are implemented to  
-                                               protect user data.
-"""
-# Import Libraries
 import config
 import jwt
 from datetime import datetime, timedelta
+from flask import request, jsonify
+from functools import wraps
 
 
 class authentication:
@@ -27,27 +15,22 @@ class authentication:
         self.algorithm = config.JWT["ALGORITHM"]
         self.access_token_expire_minutes = config.JWT["ACCESS_TOKEN_EXPIRE_MINUTES"]
 
-
     def create_token(self, user_id):
         """
         Create a JWT token for the given user ID.
         """
-        # Set the expiration time for the token
         expiration = datetime.utcnow() + timedelta(minutes=self.access_token_expire_minutes)
         schema = {
             "iss": "Jahan Danesh School",
             "sub": "Authentication",
             "alg": self.algorithm,
-            "userID": None,
-            "typ": "JWT"
+            "userID": user_id,
+            "exp": expiration
         }
         token = jwt.encode(schema, self.secret_key, algorithm=self.algorithm)
         return token
-    def decode_token(self, token):
-        """ 
-        Decode the JWT token and return the payload.
-        """
 
+    def decode_token(self, token):
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
             return payload
@@ -55,10 +38,8 @@ class authentication:
             return None
         except jwt.InvalidTokenError:
             return None
+
     def verify_token(self, token):
-        """
-        Verify the JWT token and return the payload.
-        """
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
             return payload
@@ -66,3 +47,27 @@ class authentication:
             return None
         except jwt.InvalidTokenError:
             return None
+
+    def token_required(self):
+        """
+        Decorator to protect routes with JWT authentication.
+        """
+        def decorator(f):
+            @wraps(f)
+            def decorated(*args, **kwargs):
+                token = None
+                if 'Authorization' in request.headers:
+                    auth_header = request.headers['Authorization']
+                    if auth_header.startswith("Bearer "):
+                        token = auth_header.split(" ")[1]
+
+                if not token:
+                    return jsonify({'message': 'Token is missing!'}), 401
+
+                data = self.verify_token(token)
+                if not data:
+                    return jsonify({'message': 'Token is invalid or expired!'}), 401
+
+                return f(*args, **kwargs, current_user_id=data["userID"])
+            return decorated
+        return decorator

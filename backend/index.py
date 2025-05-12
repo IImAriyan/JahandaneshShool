@@ -15,30 +15,14 @@
 
 
 # Import Libraries
-
-
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from core.database import DB
 from models.user_model import UserModel
+from authentication.jwt import authentication
 from controllers.user_controller import UserController
 from authentication.jwt import jwt
 from config import API_ROUTES
-
-# # ------------------ Testing ----------------- "
-# DB = DB()
-# (connection, cursor) = DB.connect()
-# # user = UserModel(
-# #     ROW=None,
-# #     USER_ID = "1",
-# #     username = "Reza",
-# #     password =  "1368",
-# #     email = "reza@gmail.com",
-# #     phone_number = "0913453821",   
-# #     USER_ROLE = "user",
-# #     nationalCode = "142701294",
-# #     address = "Tehran, Iran"
-# # )
-
 
 # VARIABLES
 HOST = "192.168.10.162"
@@ -47,19 +31,37 @@ PORT = 5000
 # ------------------ CREATE DB ----------------- "
 DB = DB()
 (connection, cursor) = DB.connect()
+# ------------------ CREATE DB ----------------- "
 
+
+
+# ------------------ CREATE FLASK APP ----------------- "
 app = Flask(__name__)
+CORS(app=app)
+# ------------------ CREATE FLASK APP ----------------- "
+
+
+
 controllers = {
     "user_controller": UserController(connection=connection, cursor=cursor),
 }
 
+# Auth service
+auth = authentication()
 
-# ------------------ CREATE API ----------------- "
+# START ------------------ CREATE API ----------------- [USER CONTROLLER] "
+
 @app.route(API_ROUTES["USER"]["USER_LIST"][1], methods=API_ROUTES["USER"]["USER_LIST"][0])
-def get_user_list():
+@auth.token_required()
+def get_user_list(current_user_id):
     try:
-        user_list = controllers["user_controller"].get_all_users()
-        return jsonify(user_list), 200
+        isAdmin = controllers['user_controller'].isAdmin(str(current_user_id))
+        
+        if isAdmin :
+            user_list = controllers["user_controller"].get_all_users()
+            return jsonify(user_list), 200
+        else :
+            return jsonify({'text':"You don't access to this api"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
@@ -73,6 +75,26 @@ def get_user(user_id):
             return jsonify({"error": "User not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+  
+@app.route(API_ROUTES["AUTHENTICATION"]["LOGIN"][1], methods=API_ROUTES["AUTHENTICATION"]["LOGIN"][0])
+def login():
+    try:
+        data = request.get_json()
+        username = data.get("username")
+        password = data.get("password")
+
+        if not username or not password:
+            return jsonify({"error": "Username and password are required"}), 400
+        
+        text , code = controllers["user_controller"].login(username=username,password=password)
+        return jsonify(text), code
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+# END ------------------ CREATE API ----------------- [USER CONTROLLER] "
+
 
 
 def main():

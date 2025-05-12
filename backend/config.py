@@ -23,6 +23,6 @@ API_ROUTES = {
         "GET_USER" :  [["GET"],"/api/v1/user/get/<user_id>"],
     },
     "AUTHENTICATION" : {
-        "LOGIN" : "/api/v1/login",
+        "LOGIN" : [["POST"],"/api/v1/login"],
     }
 }
