@@ -12,6 +12,7 @@
                                                protect user data.
 """
 import uuid
+import bcrypt
 from authentication.jwt import authentication 
 from typing import Optional, List
 from models.user_model import UserModel
@@ -47,6 +48,8 @@ class UserController:
 
         user.USER_ID = str(uuid.uuid4())
 
+        hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
         self.cursor.execute(
             """
             INSERT INTO jahandanesh_users 
@@ -56,7 +59,7 @@ class UserController:
             (
                 user.USER_ID,
                 user.username,
-                user.password,
+                hashed_password,
                 user.email,
                 user.phone_number,
                 user.USER_ROLE,
@@ -66,6 +69,7 @@ class UserController:
         )
         self.connection.commit()
         return True
+
 
     def get_user(self, USER_ID: str) -> Optional[UserModel]:
         self._check_db()
@@ -131,34 +135,28 @@ class UserController:
 
         return users
     
-    def isAdmin(self, USER_ID: str) -> bool:
+    def login(self, username: str, password: str):
         self._check_db()
 
         self.cursor.execute(
-            "SELECT USER_ROLE FROM jahandanesh_users WHERE USER_ID = %s", (USER_ID,)
+            "SELECT user_id, username, password FROM jahandanesh_users WHERE username = %s",
+            (username,)
         )
         result = self.cursor.fetchone()
 
         if result is None:
-            return False
+            return {"text": "نام کاربری یا رمز اشتباه است"}, 400
+        
+        user_id, db_username, db_pass = result
 
-        return result[0] != "user"
-    
+        if not bcrypt.checkpw(password.encode('utf-8'), db_pass.encode('utf-8')):
+            return {"text": "نام کاربری یا رمز اشتباه است"}, 400
 
-    def login(self, username: str, password: str) -> bool:
-        self._check_db()
 
-        self.cursor.execute(
-            "SELECT * FROM jahandanesh_users WHERE username = %s AND password = %s",
-            (username, password)
-        )
-        result = self.cursor.fetchone()
+        auth = authentication()
+        token = auth.create_token(user_id)
 
-        if result is None:
-            return {"text":"رمز یا نام کاربری اشتباه است"}, 400
-        else :
-            auth = authentication()
-            token = auth.create_token(result[1])
-            return {"text":"ورود با موفقیت انجام شد","token":token} , 200
+        return {"text": "ورود با موفقیت انجام شد", "token": token}, 200
+
 
     

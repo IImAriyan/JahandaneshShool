@@ -19,6 +19,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from core.database import DB
 from models.user_model import UserModel
+from utils.lambada_func import isAdmin
 from authentication.jwt import authentication
 from controllers.user_controller import UserController
 from authentication.jwt import jwt
@@ -46,36 +47,68 @@ controllers = {
     "user_controller": UserController(connection=connection, cursor=cursor),
 }
 
+
+test_user_model = UserModel(
+    ROW=1,
+    USER_ID="1234567890",
+    username="EmyLonseUo53", 
+    password="User24001261",
+    email="adminjonm@gmali.com",
+    phone_number="0913423512",
+    USER_ROLE="user",
+    nationalCode="1234567890",
+    address="test address",
+)
+
+controllers["user_controller"].add_user(test_user_model)
+
 # Auth service
 auth = authentication()
 
 # START ------------------ CREATE API ----------------- [USER CONTROLLER] "
 
 @app.route(API_ROUTES["USER"]["USER_LIST"][1], methods=API_ROUTES["USER"]["USER_LIST"][0])
-@auth.token_required()
+@auth.token_required()  
 def get_user_list(current_user_id):
     try:
-        isAdmin = controllers['user_controller'].isAdmin(str(current_user_id))
-        
-        if isAdmin :
+        if isAdmin(controllers["user_controller"].get_user(current_user_id)["USER_ROLE"]):
             user_list = controllers["user_controller"].get_all_users()
             return jsonify(user_list), 200
-        else :
-            return jsonify({'text':"You don't access to this api"})
+        else:
+            return jsonify({'text': "You don't have access to this api"}), 403
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
     
 @app.route(API_ROUTES["USER"]["GET_USER"][1], methods=API_ROUTES["USER"]["GET_USER"][0])
-def get_user(user_id):
+@auth.token_required()
+def get_user(user_id,current_user_id):
     try:
         user = controllers["user_controller"].get_user(user_id)
-        if user:
-            return jsonify(user), 200
+        user_role = controllers["user_controller"].get_user(current_user_id)["USER_ROLE"]
+        if user :
+            if user_id == current_user_id or isAdmin(userRole=user_role) :
+              return jsonify(user), 200
+            else :
+              return jsonify({'text': "You don't have access to this api"}), 403
+            
         else:
             return jsonify({"error": "User not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+@app.route(API_ROUTES["USER"]["REM_USER"][1], methods=API_ROUTES["USER"]["REM_USER"][0])
+@auth.token_required()
+def remove_user(user_id,current_user_id):
+    try:
+        user_role = controllers["user_controller"].get_user(current_user_id)["USER_ROLE"]
+        if isAdmin(userRole=user_role) :
+            controllers["user_controller"].delete_user(user_id)
+            return jsonify({"text": "کاربر با موفقیت حذف شد"}), 200
+        else:
+            return jsonify({'text': "You don't have access to this api"}), 403
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
   
 @app.route(API_ROUTES["AUTHENTICATION"]["LOGIN"][1], methods=API_ROUTES["AUTHENTICATION"]["LOGIN"][0])
 def login():
@@ -92,6 +125,7 @@ def login():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+  
     
 # END ------------------ CREATE API ----------------- [USER CONTROLLER] "
 

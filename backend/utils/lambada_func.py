@@ -11,21 +11,12 @@
      integration, and security measures such as authentication and input validation are implemented to  
                                                protect user data.
 """
-JWT = {
-    "SECRET_KEY" : "2JSDFLH10AOSLD2018724KJAS",
-    "ALGORITHM" :"HS256",
-    "ACCESS_TOKEN_EXPIRE_MINUTES" : 30
-}
 
-API_ROUTES = {
-    "USER" : {
-        "USER_LIST" : [["GET"],"/api/v1/user/list"],
-        "GET_USER" :  [["GET"],"/api/v1/user/get/<user_id>"],
-        "REM_USER" :  [["POST"],"/api/v1/user/remove/<user_id>"],
-        "ADD_USER" :  [["POST"],"/api/v1/user/add"],
 
-    },
-    "AUTHENTICATION" : {
-        "LOGIN" : [["POST"],"/api/v1/login"],
-    }
-}
+# ------------------------ FUNCTIONS ---------------------- #
+
+isAdmin = lambda userRole : userRole == 'admin'
+isTeacher = lambda userRole : userRole == 'teacher'
+isParent = lambda userRole : userRole == 'parent'
+
+# ------------------------ FUNCTIONS ---------------------- #
