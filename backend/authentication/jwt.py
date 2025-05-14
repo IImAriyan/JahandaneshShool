@@ -1,4 +1,4 @@
-import config
+import environment as env
 import jwt
 from datetime import datetime, timedelta
 from flask import request, jsonify
@@ -11,9 +11,9 @@ class authentication:
     """
 
     def __init__(self):
-        self.secret_key = config.JWT["SECRET_KEY"]
-        self.algorithm = config.JWT["ALGORITHM"]
-        self.access_token_expire_minutes = config.JWT["ACCESS_TOKEN_EXPIRE_MINUTES"]
+        self.secret_key = env.JWT["SECRET_KEY"]
+        self.algorithm = env.JWT["ALGORITHM"]
+        self.access_token_expire_minutes = env.JWT["ACCESS_TOKEN_EXPIRE_MINUTES"]
 
     def create_token(self, user_id):
         """

@@ -1,137 +1,252 @@
-
 """
 # Jahan Danesh School Backend
 """
 """
-       Hello, this project is a website for *Jahan Danesh School*, and this part is the backend.  
-     It is built using Python, with the Flask framework and a MySQL database for data storage.  
-     The backend also integrates AI-powered features to enhance user experience and automate certain tasks.  
-      These AI features may include intelligent recommendations, automated content analysis, or interactive  
-         tools to support learning. The backend is designed to be lightweight, fast, and scalable,  
-       ensuring a smooth experience for both students and administrators. APIs are exposed for front-end  
-     integration, and security measures such as authentication and input validation are implemented to  
-                                               protect user data.
+    This project is the backend for *Jahan Danesh School's* website.
+    It is built using Python with the Flask framework and uses a MySQL database for storage.
+    It integrates AI-powered features for smart recommendations, content analysis, and interactive tools.
+    The backend is designed to be lightweight, fast, and scalable.
+    It exposes APIs for frontend integration and includes security features like authentication and input validation.
 """
 
-
-# Import Libraries
+# Import required libraries
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import datetime
+
+# Import modules
 from core.database import DB
 from models.user_model import UserModel
 from utils.lambada_func import isAdmin
 from authentication.jwt import authentication
 from controllers.user_controller import UserController
 from authentication.jwt import jwt
-from config import API_ROUTES
+from environment import API_ROUTES
 
-# VARIABLES
+
+# Server configuration
 HOST = "192.168.10.162"
 PORT = 5000
 
-# ------------------ CREATE DB ----------------- "
+# ------------------ Initialize Database ------------------
 DB = DB()
 (connection, cursor) = DB.connect()
-# ------------------ CREATE DB ----------------- "
+# ----------------------------------------------------------
 
 
-
-# ------------------ CREATE FLASK APP ----------------- "
+# ------------------ Initialize Flask App ------------------
 app = Flask(__name__)
 CORS(app=app)
-# ------------------ CREATE FLASK APP ----------------- "
+# ----------------------------------------------------------
 
 
-
+# Initialize controllers
 controllers = {
     "user_controller": UserController(connection=connection, cursor=cursor),
 }
 
+# Sample test user (only for initial testing purposes)
+# test_user_model = UserModel(
+#     ROW=1,
+#     USER_ID="1234567890",
+#     username="EmyLonseUo53", 
+#     password="User24001261",
+#     email="adminjonm@gmali.com",
+#     phone_number="0913423512",
+#     USER_ROLE="user",
+#     nationalCode="1234567890",
+#     address="test address",
+# )
 
-test_user_model = UserModel(
-    ROW=1,
-    USER_ID="1234567890",
-    username="EmyLonseUo53", 
-    password="User24001261",
-    email="adminjonm@gmali.com",
-    phone_number="0913423512",
-    USER_ROLE="user",
-    nationalCode="1234567890",
-    address="test address",
-)
+# controllers["user_controller"].add_user(test_user_model)
 
-controllers["user_controller"].add_user(test_user_model)
-
-# Auth service
+# Initialize authentication service
 auth = authentication()
 
-# START ------------------ CREATE API ----------------- [USER CONTROLLER] "
+# ------------------ User Controller APIs ------------------
 
 @app.route(API_ROUTES["USER"]["USER_LIST"][1], methods=API_ROUTES["USER"]["USER_LIST"][0])
-@auth.token_required()  
+@auth.token_required()
 def get_user_list(current_user_id):
     try:
+        # Check if current user is admin
         if isAdmin(controllers["user_controller"].get_user(current_user_id)["USER_ROLE"]):
+            # Fetch all users from database
             user_list = controllers["user_controller"].get_all_users()
             return jsonify(user_list), 200
         else:
-            return jsonify({'text': "You don't have access to this api"}), 403
+            # If not admin, deny access
+            return jsonify({'text': "You don't have access to this API"}), 403
+    except Exception as e:
+        # Handle any unexpected error
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route(API_ROUTES["USER"]["GET_USER"][1], methods=API_ROUTES["USER"]["GET_USER"][0])
+@auth.token_required()
+def get_user(user_id, current_user_id):
+    try:
+        # Get target user info from database
+        user = controllers["user_controller"].get_user(user_id)
+
+        # Get current user's role
+        user_role = controllers["user_controller"].get_user(current_user_id)["USER_ROLE"]
+
+        if user:
+            # Allow if current user is admin or owner of the data
+            if user_id == current_user_id or isAdmin(userRole=user_role):
+                return jsonify(user), 200
+            else:
+                return jsonify({'text': "You don't have access to this API"}), 403
+        else:
+            # User not found
+            return jsonify({"error": "User not found"}), 404
+    except Exception as e:
+        # Handle error
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route(API_ROUTES["USER"]["REM_USER"][1], methods=API_ROUTES["USER"]["REM_USER"][0])
+@auth.token_required()
+def remove_user(user_id, current_user_id):
+    try:
+        # Check if current user is admin
+        user_role = controllers["user_controller"].get_user(current_user_id)["USER_ROLE"]
+        if isAdmin(userRole=user_role):
+            # Delete user from database
+            controllers["user_controller"].delete_user(user_id)
+            return jsonify({"text": "User deleted successfully"}), 200
+        else:
+            return jsonify({'text': "You don't have access to this API"}), 403
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    
-@app.route(API_ROUTES["USER"]["GET_USER"][1], methods=API_ROUTES["USER"]["GET_USER"][0])
+
+@app.route(API_ROUTES["USER"]["ADD_USER"][1], methods=API_ROUTES["USER"]["ADD_USER"][0])
 @auth.token_required()
-def get_user(user_id,current_user_id):
+def add_user(current_user_id):
     try:
+        # Check if current user is admin
+        user_role = controllers["user_controller"].get_user(current_user_id)["USER_ROLE"]
+        if isAdmin(userRole=user_role):
+            # Get user data from request body
+            data = request.get_json()
+
+            # Create new UserModel object
+            new_user = UserModel(
+                ROW=None,
+                USER_ID=None,  # USER_ID will be auto-generated
+                username=data.get("username"),
+                password=data.get("password"),
+                full_name=data.get("full_name"),
+                email=data.get("email"),
+                phone_number=data.get("phone_number"),
+                USER_ROLE=data.get("USER_ROLE"),
+                nationalCode=data.get("nationalCode"),
+                address=data.get("address"),
+                profile_picture_url=data.get("profile_picture_url"),
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+                is_active=data.get("is_active", True),
+                last_login=datetime.utcnow(),
+                gender=data.get("gender"),
+                birthdate=data.get("birthdate"),
+                grade=data.get("grade"),
+                parent_phone_number=data.get("parent_phone_number")
+            )
+
+            # Save new user to database
+            controllers["user_controller"].add_user(new_user)
+            return jsonify({"text": "User added successfully"}), 200
+        else:
+            return jsonify({'text': "You don't have access to this API"}), 403
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route(API_ROUTES["USER"]["UPDATE_USER"][1], methods=API_ROUTES["USER"]["UPDATE_USER"][0])
+@auth.token_required()
+def update_user(current_user_id):
+    try:
+        # Get data from request body
+        data = request.get_json()
+        user_id = data.get("USER_ID")
+
+        # Validate USER_ID
+        if not user_id:
+            return jsonify({"error": "USER_ID is required"}), 400
         user = controllers["user_controller"].get_user(user_id)
+        # Get current user role
         user_role = controllers["user_controller"].get_user(current_user_id)["USER_ROLE"]
-        if user :
-            if user_id == current_user_id or isAdmin(userRole=user_role) :
-              return jsonify(user), 200
-            else :
-              return jsonify({'text': "You don't have access to this api"}), 403
-            
+
+        # Check permission: only user or admin can update
+        if user_id != current_user_id and not isAdmin(user_role):
+            return jsonify({'text': "You don't have access to this API"}), 403
+
+        # Create updated UserModel object
+        updated_user = UserModel(
+            ROW=None,
+            USER_ID=user_id,
+            username=data.get("username"),
+            password=data.get("password"),
+            full_name=data.get("full_name"),
+            email=data.get("email"),
+            phone_number=data.get("phone_number"),
+            USER_ROLE=data.get("USER_ROLE"),
+            nationalCode=data.get("nationalCode"),
+            address=data.get("address"),
+            profile_picture_url=data.get("profile_picture_url"),
+            created_at=data.get("created_at", data.get("created_at")),
+            updated_at=datetime.utcnow(),
+            is_active=data.get("is_active", data.get("is_active"),
+            last_login=data.get("last_login", data.get("last_login")),
+            gender=data.get("gender"),
+            birthdate=data.get("birthdate"),
+            grade=data.get("grade"),
+            parent_phone_number=data.get("parent_phone_number")
+        ))
+
+        # Attempt to update user in DB
+        updated = controllers["user_controller"].update_user(USER_ID=user_id, newUser=updated_user)
+
+        # Response based on update result
+        if updated:
+            return jsonify({"text": "User updated successfully"}), 200
         else:
-            return jsonify({"error": "User not found"}), 404
+            return jsonify({"text": "No data was provided to update"}), 400
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
-@app.route(API_ROUTES["USER"]["REM_USER"][1], methods=API_ROUTES["USER"]["REM_USER"][0])
-@auth.token_required()
-def remove_user(user_id,current_user_id):
-    try:
-        user_role = controllers["user_controller"].get_user(current_user_id)["USER_ROLE"]
-        if isAdmin(userRole=user_role) :
-            controllers["user_controller"].delete_user(user_id)
-            return jsonify({"text": "کاربر با موفقیت حذف شد"}), 200
-        else:
-            return jsonify({'text': "You don't have access to this api"}), 403
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-  
+
+
 @app.route(API_ROUTES["AUTHENTICATION"]["LOGIN"][1], methods=API_ROUTES["AUTHENTICATION"]["LOGIN"][0])
 def login():
     try:
+        # Get login credentials from request
         data = request.get_json()
         username = data.get("username")
         password = data.get("password")
 
+        # Validate input
         if not username or not password:
             return jsonify({"error": "Username and password are required"}), 400
-        
-        text , code = controllers["user_controller"].login(username=username,password=password)
+
+        # Attempt login using user controller
+        text, code = controllers["user_controller"].login(username=username, password=password)
         return jsonify(text), code
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-  
-    
-# END ------------------ CREATE API ----------------- [USER CONTROLLER] "
+
+# ------------------ End of User APIs ------------------
 
 
 
+
+
+# Entry point
 def main():
     if __name__ == "__main__":
         app.run(host=HOST, port=PORT)
+
 main()

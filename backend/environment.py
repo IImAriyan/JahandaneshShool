@@ -23,9 +23,9 @@ API_ROUTES = {
         "GET_USER" :  [["GET"],"/api/v1/user/get/<user_id>"],
         "REM_USER" :  [["POST"],"/api/v1/user/remove/<user_id>"],
         "ADD_USER" :  [["POST"],"/api/v1/user/add"],
-
+        "UPDATE_USER": [["POST"], "/api/v1/user/update"]
     },
     "AUTHENTICATION" : {
-        "LOGIN" : [["POST"],"/api/v1/login"],
+        "LOGIN" : [["POST"],"/api/v1/auth/login"],
     }
 }
