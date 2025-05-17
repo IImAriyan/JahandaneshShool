@@ -20,6 +20,7 @@ class UserController:
     def __init__(self, cursor=None, connection=None):
         self.cursor = cursor
         self.connection = connection
+        self.table_name = "jahandanesh_users"
         self.allowed_fields = {
             "username", "password", "full_name", "email", "phone_number", "USER_ROLE",
             "nationalCode", "address", "profile_picture_url", "is_active", "last_login",
@@ -32,7 +33,7 @@ class UserController:
 
     def user_exists(self, username: str) -> bool:
         self._check_db()
-        self.cursor.execute("SELECT 1 FROM jahandanesh_users WHERE username = %s", (username,))
+        self.cursor.execute(f"SELECT 1 FROM {self.table_name} WHERE username = %s", (username,))
         return self.cursor.fetchone() is not None
 
     def add_user(self, user: UserModel) -> bool:
@@ -46,8 +47,8 @@ class UserController:
         now = datetime.utcnow()
 
         self.cursor.execute(
-            """
-            INSERT INTO jahandanesh_users 
+            f"""
+            INSERT INTO {self.table_name} 
             (USER_ID, username, password, full_name, email, phone_number, USER_ROLE, 
              nationalCode, address, profile_picture_url, created_at, updated_at, 
              is_active, last_login, gender, birthdate, grade, parent_phone_number)
@@ -80,7 +81,7 @@ class UserController:
     def get_user(self, USER_ID: str) -> Optional[dict]:
         self._check_db()
 
-        self.cursor.execute("SELECT * FROM jahandanesh_users WHERE USER_ID = %s", (USER_ID,))
+        self.cursor.execute(f"SELECT * FROM {self.table_name} WHERE USER_ID = %s", (USER_ID,))
         result = self.cursor.fetchone()
 
         if result is None:
@@ -110,7 +111,7 @@ class UserController:
         update_values.append(USER_ID)
 
         query = f"""
-            UPDATE jahandanesh_users
+            UPDATE {self.table_name}
             SET {', '.join(update_fields)}
             WHERE USER_ID = %s
         """
@@ -121,23 +122,23 @@ class UserController:
 
     def delete_user(self, USER_ID: str) -> bool:
         self._check_db()
-        self.cursor.execute("DELETE FROM jahandanesh_users WHERE USER_ID = %s", (USER_ID,))
+        self.cursor.execute(f"DELETE FROM {self.table_name} WHERE USER_ID = %s", (USER_ID,))
         self.connection.commit()
         return True
 
     def get_all_users(self) -> List[dict]:
         self._check_db()
-        self.cursor.execute("SELECT * FROM jahandanesh_users")
+        self.cursor.execute(f"SELECT * FROM {self.table_name}")
         results = self.cursor.fetchall()
 
         users = [UserModel(*result).to_dict(include_password=False) for result in results]
         return users
 
-    def login(self, username: str, password: str):
+    def login(self, username: str, password: str, role: str):
         self._check_db()
 
         self.cursor.execute(
-            "SELECT USER_ID, username, password FROM jahandanesh_users WHERE username = %s",
+            f"SELECT USER_ID, username, password , USER_ROLE FROM {self.table_name} WHERE username = %s",
             (username,)
         )
         result = self.cursor.fetchone()
@@ -145,7 +146,10 @@ class UserController:
         if result is None:
             return {"text": "نام کاربری یا رمز اشتباه است"}, 400
 
-        user_id, db_username, db_pass = result
+        user_id, db_username, db_pass, user_role = result
+
+        if user_role != role:
+            return {"text": "شما مجاز به ورود به این بخش نیستید"}, 403
 
         if not bcrypt.checkpw(password.encode('utf-8'), db_pass.encode('utf-8')):
             return {"text": "نام کاربری یا رمز اشتباه است"}, 400
@@ -155,7 +159,7 @@ class UserController:
 
         # آپدیت last_login
         self.cursor.execute(
-            "UPDATE jahandanesh_users SET last_login = %s WHERE USER_ID = %s",
+            f"UPDATE {self.table_name} SET last_login = %s WHERE USER_ID = %s",
             (datetime.utcnow(), user_id)
         )
         self.connection.commit()

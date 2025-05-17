@@ -1,3 +1,14 @@
+"""
+# Jahan Danesh School Backend
+"""
+"""
+    This project is the backend for *Jahan Danesh School's* website.
+    It is built using Python with the Flask framework and uses a MySQL database for storage.
+    It integrates AI-powered features for smart recommendations, content analysis, and interactive tools.
+    The backend is designed to be lightweight, fast, and scalable.
+    It exposes APIs for frontend integration and includes security features like authentication and input validation.
+"""
+
 import environment as env
 import jwt
 from datetime import datetime, timedelta

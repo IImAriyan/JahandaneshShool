@@ -9,15 +9,18 @@ import { User, Key } from "lucide-react";
 import { AuthCard } from "@/components/auth/auth-card";
 import ReCAPTCHA from "react-google-recaptcha";
 
+
+
 interface LoginFormProps {
   userType: "admin" | "teacher" | "parent";
-  onLogin: (username: string, password: string) => Promise<boolean>;
+  onLogin: (username: string, password: string) => Promise<[boolean, string]>;
 }
 
 export function LoginForm({ userType, onLogin }: LoginFormProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [toasttext, setToastText] = useState<string>("");
   const [captchaVerified, setCaptchaVerified] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -59,10 +62,12 @@ export function LoginForm({ userType, onLogin }: LoginFormProps) {
     
     setIsLoading(true);
     
+
+
     try {
       // In a real application, this would be an API call
-      const success = await onLogin(username, password);
-      
+      const [success, text] = await onLogin(username, password);      
+      setToastText(text)
       if (success) {
         toast({
           title: "ورود موفق",
@@ -75,7 +80,7 @@ export function LoginForm({ userType, onLogin }: LoginFormProps) {
         toast({
           variant: "destructive",
           title: "خطا در ورود",
-          description: "نام کاربری یا رمز عبور اشتباه است",
+          description: toasttext,
         });
         
         // Reset the reCAPTCHA
@@ -87,7 +92,7 @@ export function LoginForm({ userType, onLogin }: LoginFormProps) {
       toast({
         variant: "destructive",
         title: "خطا در ورود",
-        description: "مشکلی در سیستم رخ داده است. لطفا دوباره تلاش کنید.",
+        description: toasttext,
       });
       
       // Reset the reCAPTCHA

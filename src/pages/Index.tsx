@@ -4,69 +4,53 @@ import { LoginForm } from "@/components/auth/login-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { useTheme } from "@/components/theme-provider";
-
-interface TestCredentials {
-  [key: string]: {
-    username: string;
-    password: string;
-  };
-}
+import axios from 'axios';
 
 export default function Index() {
   const [activeTab, setActiveTab] = useState<"admin" | "teacher" | "parent">("admin");
   const { theme, setTheme } = useTheme();
+
+  const BASE_URL = import.meta.env.VITE_API_URL
   
-  // بارگذاری تم از localStorage در هنگام بارگذاری صفحه
   useEffect(() => {
     const savedTheme = localStorage.getItem("jahan-danesh-theme");
     if (savedTheme) {
       document.documentElement.classList.remove("light", "dark", "blue", "purple", "green");
       document.documentElement.classList.add(savedTheme);
       
-      // اگر تم ذخیره شده با تم فعلی متفاوت است، آن را به‌روز می‌کنیم
+
       if (theme !== savedTheme) {
         setTheme(savedTheme as any);
       }
     }
   }, [theme, setTheme]);
   
-  // Login handlers - in a real app these would make API calls
-  const handleAdminLogin = async (username: string, password: string) => {
-    console.log("Admin login:", username, password);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return username === "admin" && password === "admin123";
-  };
 
-  const handleTeacherLogin = async (username: string, password: string) => {
-    console.log("Teacher login:", username, password);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return username === "teacher" && password === "teacher123";
-  };
+  const loginHandler = async (username: string, password: string) => {
+    console.clear();
+    try {
+      const response = await axios.post(BASE_URL+'/auth/login', {
+        "username": username,
+        "password": password,
+        "role": activeTab
+      });
+  
+      if (response.status === 200) {
+        console.log('ورود موفقیت‌آمیز بود');
+        console.log(response.data['token']);
 
-  const handleParentLogin = async (username: string, password: string) => {
-    console.log("Parent login:", username, password);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return username === "parent" && password === "parent123";
+        return [true, response.data['token']];
+      } else {
+        console.error('ورود ناموفق بود');
+        return [false , "ورود ناموفق بود"];
+      }
+    } catch (error) {
+      console.log(error)
+      return [false, error.response.data['text']];
+    }
   };
-
-  const loginHandlers = {
-    admin: handleAdminLogin,
-    teacher: handleTeacherLogin,
-    parent: handleParentLogin,
-  };
-
-  const testCredentials: TestCredentials = {
-    admin: { username: "admin", password: "admin123" },
-    teacher: { username: "teacher", password: "teacher123" },
-    parent: { username: "parent", password: "parent123" },
-  };
-
-  // تعیین کلاس‌های پس‌زمینه بر اساس تم فعلی
+  
   const getBackgroundClasses = () => {
     switch (theme) {
       case "dark":
@@ -82,7 +66,6 @@ export default function Index() {
     }
   };
 
-  // تعیین کلاس‌های اطلاعیه تست بر اساس تم
   const getNoticeClasses = () => {
     switch (theme) {
       case "dark":
@@ -126,17 +109,10 @@ export default function Index() {
         
         <LoginForm 
           userType={activeTab} 
-          onLogin={loginHandlers[activeTab]} 
+          onLogin={loginHandler} 
         />
         
-        <div className={`mt-6 p-4 rounded-lg border text-sm ${getNoticeClasses()}`}>
-          <h3 className="font-bold mb-1">اطلاعات کاربری برای تست</h3>
-          <p className="mb-2">برای ورود به سیستم، از اطلاعات زیر استفاده کنید:</p>
-          <div className="space-y-2">
-            <p><span className="font-bold">نام کاربری:</span> {testCredentials[activeTab].username}</p>
-            <p><span className="font-bold">کلمه عبور:</span> {testCredentials[activeTab].password}</p>
-          </div>
-        </div>
+
       </div>
     </div>
   );

@@ -25,6 +25,11 @@ API_ROUTES = {
         "ADD_USER" :  [["POST"],"/api/v1/user/add"],
         "UPDATE_USER": [["POST"], "/api/v1/user/update"]
     },
+    "Hadith":{
+        "GET_LAST" : [["GET"],"/api/v1/hadith/last"],
+        "GET_ALL" : [["GET"],"/api/v1/hadith/all"],
+        "ADD_HADITH" : [["POST"],"/api/v1/hadith/add"]
+    },
     "AUTHENTICATION" : {
         "LOGIN" : [["POST"],"/api/v1/auth/login"],
     }

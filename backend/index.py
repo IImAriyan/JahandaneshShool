@@ -17,15 +17,16 @@ import datetime
 # Import modules
 from core.database import DB
 from models.user_model import UserModel
+from models.hadith_model import HadithModel
 from utils.lambada_func import isAdmin
 from authentication.jwt import authentication
 from controllers.user_controller import UserController
-from authentication.jwt import jwt
+from controllers.hadith_controller import HadithController
 from environment import API_ROUTES
 
 
 # Server configuration
-HOST = "192.168.10.162"
+HOST = "0.0.0.0" #192.168.10.162
 PORT = 5000
 
 # ------------------ Initialize Database ------------------
@@ -43,6 +44,7 @@ CORS(app=app)
 # Initialize controllers
 controllers = {
     "user_controller": UserController(connection=connection, cursor=cursor),
+    "hadith_controller": HadithController(connection=connection, cursor=cursor)
 }
 
 # Sample test user (only for initial testing purposes)
@@ -226,13 +228,15 @@ def login():
         data = request.get_json()
         username = data.get("username")
         password = data.get("password")
+        role = data.get("role")
+        role = 'user' if role == 'parent' else role
 
         # Validate input
         if not username or not password:
-            return jsonify({"error": "Username and password are required"}), 400
+            return jsonify({"error": "Username , role and password are required"}), 400
 
         # Attempt login using user controller
-        text, code = controllers["user_controller"].login(username=username, password=password)
+        text, code = controllers["user_controller"].login(username=username, password=password,role=role)
         return jsonify(text), code
 
     except Exception as e:
@@ -240,6 +244,65 @@ def login():
 
 # ------------------ End of User APIs ------------------
 
+# ------------------ Start of Hadith APIs ------------------
+
+@app.route(API_ROUTES["Hadith"]["GET_LAST"][1], methods=API_ROUTES["Hadith"]["GET_LAST"][0])
+@auth.token_required()
+def get_last_hadith(current_user_id):
+    try:
+        # Fetch last hadith from database
+        last_hadith = controllers["hadith_controller"].get_last_hadith()
+        if last_hadith:
+            return jsonify(last_hadith), 200
+        else:
+            return jsonify({"error": "No hadith found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route(API_ROUTES["Hadith"]["GET_ALL"][1], methods=API_ROUTES["Hadith"]["GET_ALL"][0])
+@auth.token_required()
+def get_all_hadiths(current_user_id):
+    try:
+        # Fetch all hadiths from database
+        if not isAdmin(controllers["user_controller"].get_user(current_user_id)["USER_ROLE"]):
+            return jsonify({'text': "You don't have access to this API"}), 403
+        
+        hadiths = controllers["hadith_controller"].get_all_hadiths()
+        return jsonify(hadiths), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route(API_ROUTES["Hadith"]["ADD_HADITH"][1], methods=API_ROUTES["Hadith"]["ADD_HADITH"][0])
+@auth.token_required()
+def add_hadith(current_user_id):
+    try:
+        # Check if current user is admin
+        user_role = controllers["user_controller"].get_user(current_user_id)["USER_ROLE"]
+        if not isAdmin(userRole=user_role):
+            return jsonify({'text': "You don't have access to this API"}), 403
+        
+        # Get hadith data from request body
+        data = request.get_json()
+        
+        # Create new HadithModel object
+        new_hadith = HadithModel(
+            row=None,  # row will be auto-generated
+            said_by=data.get("said_by"),
+            content=data.get("content"),
+            created_in=datetime.utcnow()
+        )
+        
+        # Save new hadith to database
+        success = controllers["hadith_controller"].add_hadith(new_hadith)
+        
+        if success:
+            return jsonify({"text": "Hadith added successfully"}), 200
+        else:
+            return jsonify({"error": "Failed to add hadith"}), 400
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 
