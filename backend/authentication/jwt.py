@@ -34,7 +34,6 @@ class authentication:
         schema = {
             "iss": "Jahan Danesh School",
             "sub": "Authentication",
-            "alg": self.algorithm,
             "userID": user_id,
             "exp": expiration
         }

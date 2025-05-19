@@ -87,7 +87,27 @@ class UserController:
         if result is None:
             return None
 
-        user = UserModel(*result)
+        user = UserModel(
+            ROW=result[0],
+            USER_ID=result[1],
+            username=result[2],
+            password=result[3],
+            email=result[4],
+            phone_number=result[5],
+            USER_ROLE=result[6],
+            nationalCode=result[7],
+            address=result[8],
+            full_name=result[9],
+            profile_picture_url=result[10],
+            created_at=result[11],
+            updated_at=result[12],
+            is_active=result[13],
+            last_login=result[14],
+            gender= result[15],
+            birthdate=result[16],
+            grade=result[17],
+            parent_phone_number=result[18]
+        )
         return user.to_dict(include_password=False)
 
     def update_user(self, USER_ID: str, newUser: UserModel) -> bool:

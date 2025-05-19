@@ -24,17 +24,21 @@ class HadithController() :
         
     def get_all_hadiths(self) -> list:
         self._check_db()
-        self.cursor.execute(f"SELECT * FROM {self.table_name}")
-        rows = self.cursor.fetchall()
+        with self.connection.cursor() as cursor:
+            cursor.execute(f"SELECT * FROM {self.table_name}")
+            rows = cursor.fetchall()
         return [HadithModel(*row).to_dict() for row in rows]
-    
+
+
     def get_last_hadith(self) -> HadithModel:
         self._check_db()
-        self.cursor.execute(f"SELECT * FROM {self.table_name} ORDER BY row DESC LIMIT 1")
-        row = self.cursor.fetchone()
+        with self.connection.cursor() as cursor:
+            cursor.execute(f"SELECT * FROM {self.table_name} ORDER BY row DESC LIMIT 1")
+            row = cursor.fetchone()
         if row:
             return HadithModel(*row).to_dict()
         return None
+
     
     def add_hadith(self, hadith: HadithModel) -> bool:
         self._check_db()

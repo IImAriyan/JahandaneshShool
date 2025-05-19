@@ -38,7 +38,7 @@ export default function Index() {
   
       if (response.status === 200) {
         console.log('ورود موفقیت‌آمیز بود');
-        console.log(response.data['token']);
+        localStorage.setItem("token",response.data['token'])
 
         return [true, response.data['token']];
       } else {
