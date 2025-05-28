@@ -36,8 +36,6 @@ class UserModel:
         self.grade = grade
         self.parent_phone_number = parent_phone_number
 
-    def to_dict(self, include_password=False):
+    def to_dict(self):
         data = self.__dict__.copy()
-        if not include_password:
-            data.pop("password", None)
         return data

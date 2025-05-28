@@ -11,10 +11,10 @@
 import uuid
 import bcrypt
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timedelta
 from authentication.jwt import authentication
 from models.user_model import UserModel
-
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 class UserController:
     def __init__(self, cursor=None, connection=None):
@@ -26,6 +26,10 @@ class UserController:
             "nationalCode", "address", "profile_picture_url", "is_active", "last_login",
             "gender", "birthdate", "grade", "parent_phone_number"
         }
+        self.scheduler = BlockingScheduler()
+        # Schedule the checkusers method to run every 30 minutes
+        self.scheduler.add_job(self.checkusers, 'interval', minutes=30)
+        self.scheduler.start()
 
     def _check_db(self):
         if self.cursor is None or self.connection is None:
@@ -108,7 +112,7 @@ class UserController:
             grade=result[17],
             parent_phone_number=result[18]
         )
-        return user.to_dict(include_password=False)
+        return user.to_dict()
 
     def update_user(self, USER_ID: str, newUser: UserModel) -> bool:
         self._check_db()
@@ -139,6 +143,42 @@ class UserController:
         self.cursor.execute(query, tuple(update_values))
         self.connection.commit()
         return True
+    
+
+    def change_user_value(self, USER_ID: str, field: str, value: str) -> bool:
+        self._check_db()
+
+        if field not in self.allowed_fields:
+            raise ValueError(f"Field '{field}' is not allowed to be updated.")
+
+        if field == "password":
+            value = bcrypt.hashpw(value.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+        self.cursor.execute(
+            f"UPDATE {self.table_name} SET {field} = %s WHERE USER_ID = %s",
+            (value, USER_ID)
+        )
+        self.connection.commit()
+        return True
+    
+
+    def get_user_value(self, USER_ID: str, field: str) -> Optional[str]:
+        self._check_db()
+
+        if field not in self.allowed_fields:
+            raise ValueError(f"Field '{field}' is not allowed to be retrieved.")
+
+        self.cursor.execute(f"SELECT {field} FROM {self.table_name} WHERE USER_ID = %s", (USER_ID,))
+        result = self.cursor.fetchone()
+
+        if result is None:
+            return None
+
+        return result[0]
+    
+
+    
+
 
     def delete_user(self, USER_ID: str) -> bool:
         self._check_db()
@@ -151,7 +191,7 @@ class UserController:
         self.cursor.execute(f"SELECT * FROM {self.table_name}")
         results = self.cursor.fetchall()
 
-        users = [UserModel(*result).to_dict(include_password=False) for result in results]
+        users = [UserModel(*result).to_dict().pop("passowrd",'none') for result in results]
         return users
 
     def login(self, username: str, password: str, role: str):
@@ -184,4 +224,30 @@ class UserController:
         )
         self.connection.commit()
 
+        # Check if the user is active
+        isActive = self.get_user_value(user_id, "is_active")
+        if isActive == 1:
+            return {"text": "یک کاربر فعال درحال حاضر وجود دارد"}, 400
+        
+        self.change_user_value(user_id, "is_active", 1)
+        self.change_user_value(user_id, "last_login", datetime.utcnow())
+
+
+
         return {"text": "ورود با موفقیت انجام شد", "token": token}, 200
+    
+    def checkusers(self) -> bool:
+        # get all users
+        self._check_db()
+        self.cursor.excute("SELECT * FROM {self.table_name}")
+        result = self.cursor.fetchall()
+
+        for self.allowed_fields in zip(*result):
+            lastlogin = self.allowed_fields['last_lagin']
+            now = datetime.utcnow()
+            if now - lastlogin > timedelta(minutes=30):
+                self.change_user_value(self.allowed_fields['USER_ID'], "is_active", 0)
+
+
+
+

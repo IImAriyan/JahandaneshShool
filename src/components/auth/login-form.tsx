@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,8 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { User, Key } from "lucide-react";
 import { AuthCard } from "@/components/auth/auth-card";
 import ReCAPTCHA from "react-google-recaptcha";
-
-
 
 interface LoginFormProps {
   userType: "admin" | "teacher" | "parent";
@@ -61,11 +58,8 @@ export function LoginForm({ userType, onLogin }: LoginFormProps) {
     }
     
     setIsLoading(true);
-    
-
 
     try {
-      // In a real application, this would be an API call
       const [success, text] = await onLogin(username, password);      
       setToastText(text)
       if (success) {
@@ -73,8 +67,6 @@ export function LoginForm({ userType, onLogin }: LoginFormProps) {
           title: "ورود موفق",
           description: "در حال انتقال به داشبورد...",
         });
-        
-        // Navigate to the appropriate dashboard
         navigate(`/${userType}-dashboard`);
       } else {
         toast({
@@ -82,8 +74,6 @@ export function LoginForm({ userType, onLogin }: LoginFormProps) {
           title: "خطا در ورود",
           description: toasttext,
         });
-        
-        // Reset the reCAPTCHA
         recaptchaRef.current?.reset();
         setCaptchaVerified(false);
       }
@@ -94,8 +84,6 @@ export function LoginForm({ userType, onLogin }: LoginFormProps) {
         title: "خطا در ورود",
         description: toasttext,
       });
-      
-      // Reset the reCAPTCHA
       recaptchaRef.current?.reset();
       setCaptchaVerified(false);
     } finally {
@@ -152,7 +140,7 @@ export function LoginForm({ userType, onLogin }: LoginFormProps) {
         <div className="flex justify-center my-4">
           <ReCAPTCHA
             ref={recaptchaRef}
-            sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" 
+            sitekey="6Ldp7UMrAAAAAGzIqaFY5PoY9oLkW8u1zTGyJm7s"
             onChange={handleCaptchaChange}
           />
         </div>

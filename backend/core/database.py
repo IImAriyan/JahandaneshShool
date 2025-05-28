@@ -22,7 +22,7 @@ class DB :
         # ---- VARIABLES ----
         self.HOST = "localhost"
         self.USER = "root"
-        self.PASS = ""
+        self.PASS = "M9135062821a"
         self.DATABASE = "jahandanesh_school"
     def connect(self) :
 

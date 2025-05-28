@@ -6,41 +6,7 @@ import {Link, useNavigate} from "react-router-dom";
 import {decodeJWT} from "jwt-parse";
 import {useEffect, useState} from "react";
 import axios from "axios";
-
-interface TokenPayload {
-  iss: string;
-  sub: string;
-  userID: string;
-  exp: number;
-}
-
-interface Hadith {
-  content: string,
-  created_in: string,
-  row: number,
-  said_by: string
-}
-
-interface studentData {
-  ROW: number;
-  USER_ID: string;
-  USER_ROLE: string;
-  address: string;
-  birthdate: string | null;
-  created_at: string;
-  email: string;
-  full_name: string | null;
-  gender: string | null;
-  grade: string | null;
-  is_active: number;
-  last_login: string;
-  nationalCode: number;
-  parent_phone_number: string | null;
-  phone_number: number;
-  profile_picture_url: string | null;
-  updated_at: string;
-  username: string;
-}
+import { TokenPayload, Hadith, userDataInt } from "@/interfaces/Interfaces";
 
 export function ParentDashboard() {
   const [weeklyHadith, setWeeklyHadith] = useState<Hadith>({
@@ -50,26 +16,14 @@ export function ParentDashboard() {
     said_by: "",
   });
 
-  const [studentData , setStudentData] = useState<studentData>()
+  const [studentData , setStudentData] = useState<userDataInt>()
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    if (!token) {
-      navigate("/portal");
-      return;
-    }
-
     const decoded = decodeJWT(token).payload as TokenPayload;
-    const currentTime = Math.floor(Date.now() / 1000);
-
-    if (!decoded?.exp || decoded.exp < currentTime) {
-      localStorage.removeItem("token");
-      navigate("/portal");
-      return;
-    }
 
     const fetchHadith = async () => {
       try {
@@ -86,35 +40,30 @@ export function ParentDashboard() {
 
     const fetchUserData = async () => {
       try {
-        const response = await axios.get(BASE_URL + "/user/get"+ decoded.userID, {
+        const response = await axios.get(BASE_URL + "/user/get/"+ decoded.userID, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
 
         setStudentData(response.data)
+        
       } catch (error){
         console.error(error)
       }
     }
 
+    fetchUserData();
     fetchHadith();
   }, [token, navigate, BASE_URL]);
 
   let tokenData = {};
   if (token) {
     tokenData = decodeJWT(token);
-    console.log(tokenData);
   }
 
-  const student = {
-    name: studentData.full_name,
-    family: studentData.full_name,
-    grade: studentData.grade,
-    class: `9-7`,
-    attendanceRate: 92,
-    gpa: 19.21,
-  };
+  
+
 
   const upcomingEvents = [
     {
@@ -156,8 +105,8 @@ export function ParentDashboard() {
               حدیث هفتگی مدرسه جهان دانش
             </div>
             <div className="text-white text-center p-4 font-bold bg-green-300 rounded-xl m-4 flex flex-col">
-              <h1 className='text-[1rem] text-right text-green-600'>{weeklyHadith.said_by}</h1>
-              <p>{weeklyHadith.content}</p>
+              <h1 className='text-[1rem] text-right text-green-600'>{weeklyHadith?.said_by}</h1>
+              <p>{weeklyHadith?.content}</p>
             </div>
           </div>
         </div>
@@ -166,10 +115,10 @@ export function ParentDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">
-                سلام خانواده {student.family} به پورتال والدین خوش آمدید
+                سلام خانواده {studentData?.full_name} به پورتال والدین خوش آمدید
               </h1>
               <p className="opacity-90 mt-1">
-                اطلاعات و وضعیت تحصیلی دانش آموز: {student.name}
+                اطلاعات و وضعیت تحصیلی دانش آموز: {studentData?.full_name}
               </p>
             </div>
             <div className="h-16 w-16 rounded-full bg-white/20 flex items-center justify-center">
@@ -180,16 +129,16 @@ export function ParentDashboard() {
             <div className="bg-white/10 p-4 rounded-md backdrop-blur-sm">
               <p className="text-sm opacity-75">کلاس</p>
               <p className="text-lg font-bold">
-                پایه {student.grade} - کلاس {student.class}
+                پایه {studentData?.grade} - کلاس {studentData?.grade} - 9
               </p>
             </div>
             <div className="bg-white/10 p-4 rounded-md backdrop-blur-sm">
               <p className="text-sm opacity-75">میزان حضور</p>
-              <p className="text-lg font-bold">{student.attendanceRate}%</p>
+              <p className="text-lg font-bold">{90}%</p>
             </div>
             <div className="bg-white/10 p-4 rounded-md backdrop-blur-sm">
               <p className="text-sm opacity-75">معدل</p>
-              <p className="text-lg font-bold">{student.gpa}</p>
+              <p className="text-lg font-bold">{18}</p>
             </div>
           </div>
         </div>

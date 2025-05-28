@@ -7,7 +7,9 @@ import { SchoolLogo } from "@/components/school-logo";
 import { cn } from "@/lib/utils";
 import { LogOut, Bell, Home, Calendar, Users, User, Clock, BookOpen, ChartBar, Settings, FileCheck, CalendarDays } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { TokenPayload } from "@/interfaces/Interfaces";
 import { useTheme } from "@/components/theme-provider";
+import { decodeJWT } from "jwt-parse";
 
 interface DashboardLayoutProps {
   userType: "admin" | "teacher" | "parent";
@@ -20,9 +22,22 @@ export function DashboardLayout({ userType, children }: DashboardLayoutProps) {
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
   const [userName, setUserName] = useState("کاربر جهان دانش"); // In a real app this would come from auth
+  const token = localStorage.getItem("token");
 
   // اطمینان از بارگذاری تم از localStorage و اجرا در کل برنامه
   useEffect(() => {
+        if (!token) {
+          navigate("/portal");
+          return;
+        }
+        const decoded = decodeJWT(token).payload as TokenPayload;
+        const currentTime = Math.floor(Date.now() / 1000);
+    
+        if (!decoded?.exp || decoded.exp < currentTime) {
+          localStorage.removeItem("token");
+          navigate("/portal");
+          return;
+        }
     const savedTheme = localStorage.getItem("jahan-danesh-theme");
     if (savedTheme) {
       document.documentElement.classList.remove("light", "dark", "blue", "purple", "green");
@@ -33,7 +48,7 @@ export function DashboardLayout({ userType, children }: DashboardLayoutProps) {
         setTheme(savedTheme as any);
       }
     }
-  }, [theme, setTheme]);
+  }, [theme, setTheme, token]);
 
   // Define menu items based on user type
   const getMenuItems = () => {

@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,107 +23,180 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {userDataInt, TokenPayload} from "@/interfaces/Interfaces"
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import {decodeJWT} from "jwt-parse";
 
-// Define a type for the user role
-type UserRole = "teacher" | "admin" | "parent";
-
-// Define a type for the users array
-interface User {
-  id: number | string;
-  name: string;
-  role: string;
-  subject: string;
-  status: string;
-}
+type UserRole = "teacher" | "admin" | "user";
 
 export default function AdminUsers() {
   const { toast } = useToast();
-  const [users, setUsers] = useState<User[]>([
-    { id: 1, name: "علی محمدی", role: "معلم", subject: "ریاضی", status: "فعال" },
-    { id: 2, name: "حسن رضایی", role: "معلم", subject: "علوم", status: "فعال" },
-    { id: 3, name: "محمد کریمی", role: "معلم", subject: "ادبیات", status: "فعال" },
-    { id: 4, name: "رضا حسینی", role: "معلم", subject: "زبان", status: "غیرفعال" },
-    { id: 5, name: "مریم علوی", role: "کارمند اداری", subject: "-", status: "فعال" },
-  ]);
+  String()
+  const [users, setUsers] = useState<userDataInt[]>([]);
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
-  // User form state with correctly typed role property
+
   const [newUser, setNewUser] = useState({
+    username: "",
+    first_name: "",
+    last_name: "",
     email: "",
     password: "",
-    firstName: "",
-    lastName: "",
-    role: "teacher" as UserRole, // Type assertion to ensure role is of type UserRole
-    subject: "",
-    isActive: true
+    role: "والدین"
   });
 
-  const handleInputChange = (e) => {
+  const navigate = useNavigate();
+
+  const BASE_URL = import.meta.env.VITE_API_URL;
+  const token = localStorage.getItem("token");
+
+
+  useEffect(() => {
+
+    const fetchUsersData = async () => {
+      try {
+        const response = await axios.get(BASE_URL + "/user/list", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        setUsers(response.data);
+
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchUsersData();
+
+  }, [BASE_URL, token, navigate]);
+
+  function getCurrentDateTime(): string {
+    const now = new Date();
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
+
+  function getCurrentDate(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
+
+  const addUser = async (user:userDataInt,password:string) => {
+    const response = await axios.post(BASE_URL + '/user/add',{
+      "ROW": 1,
+      "USER_ID": "set_in_backend",
+      "username": user.username,
+      "password": password,
+      "email": user.email,
+      "phone_number": user.phone_number.toString(),
+      "USER_ROLE": user.USER_ROLE,
+      "nationalCode": user.nationalCode,
+      "address": user.address,
+      "full_name": user.full_name,
+      "profile_picture_url": "",
+      "created_at": "2024-05-20T12:34:56Z",
+      "updated_at": "2024-05-21T08:22:11Z",
+      "is_active": 0,
+      "last_login": "2025-05-21 14:30:00",
+      "gender": user.gender,
+      "birthdate": user.birthdate,
+      "grade": user.grade,
+      "parent_phone_number": user.parent_phone_number
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setNewUser(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (name: string, value: any) => {
-    // For role specifically, ensure it's of type UserRole
     if (name === 'role') {
-      // Only allow values that match UserRole type
       const roleValue = value as UserRole;
-      setNewUser(prev => ({ ...prev, [name]: roleValue }));
+      setNewUser(prev => ({ ...prev, 'role': roleValue }));
     } else {
-      setNewUser(prev => ({ ...prev, [name]: value }));
+      setNewUser(prev => ({ ...prev, 'role': value }));
     }
   };
 
-  const handleSwitchChange = (checked) => {
-    setNewUser(prev => ({ ...prev, isActive: checked }));
-  };
+  const filteredUsers = users.filter(user => {
+    const fullName = user.full_name ?? "";
+    const role = user.USER_ROLE ?? "";
+    const username = user.username ?? "";
 
-  const filteredUsers = users.filter(user => 
-    user.name.includes(searchTerm) || 
-    user.role.includes(searchTerm) || 
-    user.subject.includes(searchTerm)
-  );
+    return (
+      fullName.includes(searchTerm) ||
+      role.includes(searchTerm) ||
+      username.includes(searchTerm)
+    );
+  });
 
   const createUser = async () => {
     setIsLoading(true);
-    
+
     try {
-      // در آینده به API متصل خواهد شد
       setTimeout(() => {
-        // ساخت کاربر جدید به صورت مصنوعی
-        const newUserObj: User = {
-          id: Date.now(),
-          name: `${newUser.firstName} ${newUser.lastName}`,
-          role: newUser.role === 'teacher' ? 'معلم' : 
-                newUser.role === 'admin' ? 'مدیر' : 'والدین',
-          subject: newUser.subject || "-",
-          status: newUser.isActive ? "فعال" : "غیرفعال"
-        };
-        
-        setUsers(prev => [...prev, newUserObj]);
-        
         toast({
           title: "کاربر با موفقیت افزوده شد",
-          description: `${newUser.firstName} ${newUser.lastName} به سیستم افزوده شد.`,
+          description: `${newUser.first_name} ${newUser.last_name} به سیستم افزوده شد.`,
         });
-        
-        // Reset the form and close the dialog
-        setNewUser({
-          email: "",
-          password: "",
-          firstName: "",
-          lastName: "",
-          role: "teacher" as UserRole,
-          subject: "",
-          isActive: true
-        });
+
+        const dateTime = getCurrentDateTime();
+        const date = getCurrentDate();
+
+        const roleMap: Record<string, string> = {
+          "user": "user",
+          "teacher": "teacher",
+          "admin": "admin"
+        };
+
+        const userAdd: userDataInt = {
+          "ROW": 1,
+          "USER_ID": "set_in_backend",
+          "username": newUser.username,
+          "email": newUser.email,
+          "phone_number": 0,
+          "USER_ROLE": roleMap[newUser.role] || "user",
+          "nationalCode": 0,
+          "address": "",
+          "full_name": newUser.first_name + " " + newUser.last_name,
+          "profile_picture_url": "",
+          "created_at": dateTime.toString(),
+          "updated_at": dateTime.toString(),
+          "is_active": 0,
+          "last_login": dateTime.toString(),
+          "gender": "",
+          "birthdate": date.toString(),
+          "grade": "",
+          "parent_phone_number": ""
+        };
+
+        addUser(userAdd, newUser.password);
         setIsOpen(false);
         setIsLoading(false);
       }, 1000);
-      
+
     } catch (error) {
       console.error("Error creating user:", error);
       toast({
@@ -147,7 +219,7 @@ export default function AdminUsers() {
               افزودن کاربر
             </Button>
           </div>
-          
+
           <Card>
             <CardHeader className="pb-2">
               <CardTitle>لیست کاربران</CardTitle>
@@ -169,22 +241,22 @@ export default function AdminUsers() {
                   <TableRow>
                     <TableHead>نام کاربر</TableHead>
                     <TableHead>نقش</TableHead>
-                    <TableHead>تخصص</TableHead>
+                    <TableHead>نام کاربری</TableHead>
                     <TableHead>وضعیت</TableHead>
                     <TableHead>عملیات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>{user.name}</TableCell>
-                      <TableCell>{user.role}</TableCell>
-                      <TableCell>{user.subject}</TableCell>
+                    <TableRow key={user.USER_ID}>
+                      <TableCell>{user.full_name}</TableCell>
+                      <TableCell>{user.USER_ROLE}</TableCell>
+                      <TableCell>{user.username}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-md text-sm ${
-                          user.status === "فعال" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                          user.is_active === 1 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                         }`}>
-                          {user.status}
+                          {user.is_active === 1 ? "فعال" : "غیرفعال"}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -198,7 +270,6 @@ export default function AdminUsers() {
           </Card>
         </div>
 
-        {/* Add User Dialog */}
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
@@ -207,25 +278,36 @@ export default function AdminUsers() {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">نام</Label>
+                  <Label htmlFor="first_name">نام</Label>
                   <Input 
-                    id="firstName"
-                    name="firstName" 
+                    id="first_name"
+                    name="first_name" 
                     placeholder="نام" 
-                    value={newUser.firstName}
+                    value={newUser.first_name}
                     onChange={handleInputChange}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">نام خانوادگی</Label>
+                  <Label htmlFor="last_name">نام خانوادگی</Label>
                   <Input 
-                    id="lastName"
-                    name="lastName" 
+                    id="last_name"
+                    name="last_name" 
                     placeholder="نام خانوادگی" 
-                    value={newUser.lastName}
+                    value={newUser.last_name}
                     onChange={handleInputChange}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="username">نام کاربری</Label>
+                <Input 
+                  id="username"
+                  name="username"  
+                  placeholder="نام کاربری" 
+                  value={newUser.username}
+                  onChange={handleInputChange}
+                />
               </div>
               
               <div className="space-y-2">
@@ -239,7 +321,7 @@ export default function AdminUsers() {
                   onChange={handleInputChange}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">رمز عبور</Label>
                 <Input 
@@ -251,52 +333,27 @@ export default function AdminUsers() {
                   onChange={handleInputChange}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="role">نقش</Label>
                 <Select 
-                  value={newUser.role}
-                  onValueChange={(value) => handleSelectChange("role", value)}
+                  value={newUser.role} 
+                  onValueChange={value => handleSelectChange("role", value)}
                 >
                   <SelectTrigger id="role">
                     <SelectValue placeholder="انتخاب نقش" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">مدیر</SelectItem>
+                    <SelectItem value="user">والدین</SelectItem>
                     <SelectItem value="teacher">معلم</SelectItem>
-                    <SelectItem value="parent">والدین</SelectItem>
+                    <SelectItem value="admin">مدیر</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              
-              {newUser.role === "teacher" && (
-                <div className="space-y-2">
-                  <Label htmlFor="subject">تخصص</Label>
-                  <Input 
-                    id="subject"
-                    name="subject" 
-                    placeholder="تخصص (مثال: ریاضی)" 
-                    value={newUser.subject}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              )}
-              
-              <div className="flex items-center space-x-2">
-                <Label htmlFor="is-active" className="ml-2">وضعیت فعال</Label>
-                <Switch 
-                  id="is-active" 
-                  checked={newUser.isActive}
-                  onCheckedChange={handleSwitchChange}
-                />
-              </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsOpen(false)}>
-                انصراف
-              </Button>
-              <Button onClick={createUser} disabled={isLoading}>
-                {isLoading ? "در حال ثبت..." : "افزودن کاربر"}
+              <Button disabled={isLoading} onClick={createUser}>
+                افزودن
               </Button>
             </DialogFooter>
           </DialogContent>

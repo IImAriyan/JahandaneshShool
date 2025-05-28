@@ -81,3 +81,15 @@ class authentication:
                 return f(*args, **kwargs, current_user_id=data["userID"])
             return decorated
         return decorator
+
+    def is_token_expired(self, token):
+        """
+        Check if the given token is expired.
+        """
+        try:
+            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            return datetime.fromtimestamp(payload['exp']) < datetime.utcnow()
+        except jwt.ExpiredSignatureError:
+            return True
+        except jwt.InvalidTokenError:
+            return True

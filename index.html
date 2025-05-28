@@ -1,26 +1,66 @@
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>پورتال مدرسه جهان دانش سیرجان</title>
-    <meta name="description" content="پورتال مدرسه جهان دانش سیرجان - سیستم مدیریت آموزشی" />
-    <meta name="author" content="Jahan Danesh Sirjan School" />
 
-    <meta property="og:title" content="پورتال مدرسه جهان دانش سیرجان" />
-    <meta property="og:description" content="سیستم مدیریت آموزشی مدرسه جهان دانش سیرجان" />
+    <title>مدرسه جهان دانش سیرجان | پورتال رسمی آموزشی و ثبت‌نام</title>
+
+    <meta name="description" content="وبسایت رسمی مدرسه جهان دانش سیرجان. ثبت‌نام، اخبار، سیستم آموزشی، امکانات مدرسه، و ارتباط با والدین." />
+    <meta name="keywords" content="مدرسه جهان دانش, مدرسه سیرجان, ثبت‌نام مدرسه, مدرسه غیرانتفاعی, سیستم آموزشی سیرجان" />
+    <meta name="author" content="مدرسه جهان دانش سیرجان" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://jahandanesh.com" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="مدرسه جهان دانش سیرجان | پورتال رسمی آموزشی" />
+    <meta property="og:description" content="پرتال رسمی مدرسه جهان دانش سیرجان شامل اطلاعات ثبت‌نام، برنامه درسی و اخبار مدرسه" />
     <meta property="og:type" content="website" />
-    <meta name="webstie icon" src="src/assets/logo_jahandanesh.png">
+    <meta property="og:url" content="https://jahandanesh.com" />
+    <!-- <meta property="og:image" content="https://jahandanesh.com/assets/og-image.jpg" /> -->
 
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="مدرسه جهان دانش سیرجان | پورتال آموزشی" />
+    <meta name="twitter:description" content="سیستم آموزشی هوشمند و ثبت‌نام آنلاین مدرسه جهان دانش سیرجان" />
+    <!-- <meta name="twitter:image" content="https://jahandanesh.com/assets/og-image.jpg" /> -->
 
+    <link rel="icon" href="public/favicon.ico" />
+
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        "name": "مدرسه جهان دانش سیرجان",
+        "url": "https://jahandanesh.com",
+        "logo": "https://jahandanesh.com/assets/logo_jahandanesh.png",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "سیرجان",
+          "addressCountry": "IR"
+        },
+        "sameAs": [
+          "https://instagram.com/jahandanesh",
+          "https://maps.google.com/?q=مدرسه+جهان+دانش+سیرجان"
+        ]
+      }
+    </script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SQ5PQDPP4D"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-SQ5PQDPP4D');
+    </script>
 
   </head>
 
   <body>
     <div id="root"></div>
-
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
